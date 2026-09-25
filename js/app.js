@@ -4,7 +4,7 @@
 // in, which is this file's entry point.
 window.RecipeApp = (function () {
   const CATEGORIES = [
-    'Breakfast', 'Breads', 'Main Dishes', 'Appetizer', 'Sides',
+    'Breakfast', 'Breads', 'Main Dishes', 'Appetizer', 'Side Dishes',
     'Dessert', 'Cookies', 'Candies', 'Beverage', 'Other'
   ];
 
