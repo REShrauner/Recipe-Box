@@ -10,13 +10,18 @@ window.RecipeApp = (function () {
 
   let allRecipes = [];
   let editingId = null; // null = adding a new recipe; otherwise the id being edited
+  let currentCategory = null; // null = showing the categories landing page
 
   // ---- Element references -------------------------------------------------
   const recipeList = document.getElementById('recipe-list');
   const emptyState = document.getElementById('empty-state');
   const searchInput = document.getElementById('search-input');
-  const categoryFilter = document.getElementById('category-filter');
   const addRecipeButton = document.getElementById('add-recipe-button');
+  const categoriesView = document.getElementById('categories-view');
+  const categoriesGrid = document.getElementById('categories-grid');
+  const categoriesEmptyState = document.getElementById('categories-empty-state');
+  const backToCategoriesButton = document.getElementById('back-to-categories-button');
+  const categoryHeading = document.getElementById('category-heading');
 
   const formDialog = document.getElementById('recipe-form-dialog');
   const recipeForm = document.getElementById('recipe-form');
@@ -51,11 +56,6 @@ window.RecipeApp = (function () {
   // ---- Setup that only needs to happen once --------------------------------
   function populateCategoryOptions() {
     CATEGORIES.forEach((cat) => {
-      const filterOpt = document.createElement('option');
-      filterOpt.value = cat;
-      filterOpt.textContent = cat;
-      categoryFilter.appendChild(filterOpt);
-
       const formOpt = document.createElement('option');
       formOpt.value = cat;
       formOpt.textContent = cat;
@@ -90,8 +90,7 @@ window.RecipeApp = (function () {
     renderList();
   }
 
-  function matchesFilters(recipe, searchTerm, category) {
-    if (category && recipe.category !== category) return false;
+  function matchesFilters(recipe, searchTerm) {
     if (!searchTerm) return true;
     const haystack = [
       recipe.title,
@@ -101,15 +100,41 @@ window.RecipeApp = (function () {
     return haystack.includes(searchTerm);
   }
 
-  function renderList() {
-    const searchTerm = searchInput.value.trim().toLowerCase();
-    const category = categoryFilter.value;
-    const filtered = allRecipes.filter((r) => matchesFilters(r, searchTerm, category));
+  // Category tile counts are derived from the actual recipes, so a category
+  // with nothing in it yet just doesn't show a tile.
+  function renderCategoryTiles() {
+    categoriesGrid.innerHTML = '';
+    const counts = {};
+    allRecipes.forEach((r) => {
+      const cat = r.category || 'Uncategorized';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    const cats = Object.keys(counts).sort((a, b) => a.localeCompare(b));
 
+    categoriesEmptyState.hidden = cats.length > 0;
+
+    cats.forEach((cat) => {
+      const tile = document.createElement('button');
+      tile.type = 'button';
+      tile.className = 'category-tile';
+      tile.innerHTML = `
+        <h3>${escapeHtml(cat)}</h3>
+        <span class="hint">${counts[cat]} recipe${counts[cat] === 1 ? '' : 's'}</span>
+      `;
+      tile.addEventListener('click', () => {
+        currentCategory = cat;
+        searchInput.value = '';
+        renderList();
+      });
+      categoriesGrid.appendChild(tile);
+    });
+  }
+
+  function renderRecipeCards(recipes) {
     recipeList.innerHTML = '';
-    emptyState.hidden = filtered.length > 0;
+    emptyState.hidden = recipes.length > 0;
 
-    filtered.forEach((recipe) => {
+    recipes.forEach((recipe) => {
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'recipe-card';
@@ -127,6 +152,45 @@ window.RecipeApp = (function () {
       recipeList.appendChild(card);
     });
   }
+
+  // Three states: browsing categories (no category picked, no search), a
+  // single category's recipes, or search results (scoped to the current
+  // category if one's picked, otherwise across everything).
+  function renderList() {
+    const searchTerm = searchInput.value.trim().toLowerCase();
+
+    if (!currentCategory && !searchTerm) {
+      categoriesView.hidden = false;
+      recipeList.hidden = true;
+      emptyState.hidden = true;
+      backToCategoriesButton.hidden = true;
+      categoryHeading.hidden = true;
+      renderCategoryTiles();
+      return;
+    }
+
+    categoriesView.hidden = true;
+    recipeList.hidden = false;
+    backToCategoriesButton.hidden = !currentCategory;
+    categoryHeading.hidden = !currentCategory;
+    if (currentCategory) categoryHeading.textContent = currentCategory;
+
+    const pool = currentCategory
+      ? allRecipes.filter((r) => (r.category || 'Uncategorized') === currentCategory)
+      : allRecipes;
+    const filtered = pool
+      .filter((r) => matchesFilters(r, searchTerm))
+      .slice()
+      .sort((a, b) => a.title.localeCompare(b.title));
+
+    renderRecipeCards(filtered);
+  }
+
+  backToCategoriesButton.addEventListener('click', () => {
+    currentCategory = null;
+    searchInput.value = '';
+    renderList();
+  });
 
   // ---- Detail view -----------------------------------------------------------
   function openDetail(id) {
@@ -202,6 +266,7 @@ window.RecipeApp = (function () {
     } else {
       formTitleHeading.textContent = 'Add Recipe';
       deleteButton.hidden = true;
+      if (currentCategory) fieldCategory.value = currentCategory;
     }
 
     formDialog.showModal();
@@ -276,7 +341,6 @@ window.RecipeApp = (function () {
 
   // ---- Search & filter ---------------------------------------------------------
   searchInput.addEventListener('input', renderList);
-  categoryFilter.addEventListener('change', renderList);
 
   // ---- Entry point, called by auth.js once signed in -----------------------------
   let initialized = false;

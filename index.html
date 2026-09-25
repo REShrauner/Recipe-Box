@@ -36,11 +36,15 @@
 
   <main>
     <div class="toolbar">
+      <button type="button" id="back-to-categories-button" class="push-left" hidden>&larr; Categories</button>
+      <h2 id="category-heading" hidden></h2>
       <input type="search" id="search-input" placeholder="Search by title or ingredient...">
-      <select id="category-filter">
-        <option value="">All categories</option>
-      </select>
       <button id="add-recipe-button" class="primary">+ Add Recipe</button>
+    </div>
+
+    <div id="categories-view">
+      <div id="categories-grid"></div>
+      <p id="categories-empty-state" class="hint" hidden>No recipes yet - add one to get started!</p>
     </div>
 
     <div id="recipe-list"></div>
