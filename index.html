@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recipe Box</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- Sign-in gate: shown until you're logged in -->
+<div id="sign-in-view">
+  <h1>Recipe Box</h1>
+  <p class="hint">Sign in with the account you created for yourself in Supabase.</p>
+  <form id="sign-in-form">
+    <div class="form-row">
+      <label for="sign-in-email">Email</label>
+      <input type="email" id="sign-in-email" required autocomplete="username">
+    </div>
+    <div class="form-row">
+      <label for="sign-in-password">Password</label>
+      <input type="password" id="sign-in-password" required autocomplete="current-password">
+    </div>
+    <p id="sign-in-error" class="hint" hidden></p>
+    <button type="submit" class="primary">Sign in</button>
+  </form>
+</div>
+
+<!-- Main app: hidden until signed in -->
+<div id="app-view" hidden>
+  <header class="app-header">
+    <h1>Recipe Box</h1>
+    <span class="hint" id="user-email-label"></span>
+    <button id="sign-out-button">Sign out</button>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <input type="search" id="search-input" placeholder="Search by title or ingredient...">
+      <select id="category-filter">
+        <option value="">All categories</option>
+      </select>
+      <button id="add-recipe-button" class="primary">+ Add Recipe</button>
+    </div>
+
+    <div id="recipe-list"></div>
+    <p id="empty-state" hidden>No recipes match yet. Try a different search, or add one!</p>
+  </main>
+</div>
+
+<!-- Add / edit recipe dialog -->
+<dialog id="recipe-form-dialog">
+  <div class="dialog-body">
+    <h2 id="recipe-form-title">Add Recipe</h2>
+
+    <div class="tabs" role="tablist">
+      <button type="button" id="tab-manual" role="tab" aria-selected="true">Manual Entry</button>
+      <button type="button" id="tab-quick-paste" role="tab" aria-selected="false">Quick Paste</button>
+    </div>
+
+    <!-- Quick paste: transcribe from anywhere by pasting the whole recipe text -->
+    <div id="quick-paste-panel" hidden>
+      <p class="hint">
+        Paste a whole recipe here - copied from a Word document, a website, a PDF, or typed out
+        from a photo or recipe card. Works best when the text has "Ingredients" and
+        "Instructions" (or "Directions") on their own lines.
+      </p>
+      <textarea id="quick-paste-text" rows="10" placeholder="Paste recipe text here..."></textarea>
+      <div class="dialog-actions">
+        <button type="button" id="quick-paste-parse-button" class="primary">Parse into fields</button>
+      </div>
+      <p id="quick-paste-summary" class="hint"></p>
+    </div>
+
+    <!-- Manual entry: always the source of truth that actually gets saved -->
+    <form id="recipe-form">
+      <div id="manual-panel">
+        <div class="form-row">
+          <label for="field-title">Title</label>
+          <input type="text" id="field-title" required>
+        </div>
+
+        <div class="form-row two-col">
+          <div>
+            <label for="field-category">Category</label>
+            <select id="field-category">
+              <option value="">(none)</option>
+            </select>
+          </div>
+          <div>
+            <label for="field-tags">Tags (comma-separated)</label>
+            <input type="text" id="field-tags" placeholder="quick, freezer-friendly, potluck">
+          </div>
+        </div>
+
+        <div class="form-row two-col">
+          <div>
+            <label for="field-servings">Servings</label>
+            <input type="text" id="field-servings" placeholder="6 servings">
+          </div>
+          <div>
+            <label for="field-prep-time">Prep time</label>
+            <input type="text" id="field-prep-time" placeholder="15 min">
+          </div>
+          <div>
+            <label for="field-cook-time">Cook time</label>
+            <input type="text" id="field-cook-time" placeholder="30 min">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="field-ingredients">Ingredients (one per line)</label>
+          <textarea id="field-ingredients" rows="6" required></textarea>
+        </div>
+
+        <div class="form-row">
+          <label for="field-instructions">Instructions (one step per line)</label>
+          <textarea id="field-instructions" rows="6" required></textarea>
+        </div>
+
+        <div class="form-row two-col">
+          <div>
+            <label for="field-source">Source</label>
+            <input type="text" id="field-source" placeholder="Grandma's recipe box">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="field-notes">Notes</label>
+          <textarea id="field-notes" rows="3"></textarea>
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" id="delete-recipe-button" class="danger push-left" hidden>Delete</button>
+        <button type="button" id="cancel-recipe-button">Cancel</button>
+        <button type="submit" class="primary">Save Recipe</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- View recipe dialog -->
+<dialog id="recipe-detail-dialog">
+  <div class="dialog-body">
+    <div id="recipe-detail-content"></div>
+    <div class="dialog-actions">
+      <button id="edit-from-detail-button" class="push-left">Edit</button>
+      <button id="close-detail-button" class="primary">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/supabaseClient.js"></script>
+<script src="js/quickAdd.js"></script>
+<script src="js/app.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>
