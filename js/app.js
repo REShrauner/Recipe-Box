@@ -11,6 +11,7 @@ window.RecipeApp = (function () {
   let allRecipes = [];
   let editingId = null; // null = adding a new recipe; otherwise the id being edited
   let currentCategory = null; // null = showing the categories landing page
+  let currentUserId = null; // set once signed in; used to gate edit/delete to your own recipes
 
   // ---- Element references -------------------------------------------------
   const recipeList = document.getElementById('recipe-list');
@@ -47,6 +48,7 @@ window.RecipeApp = (function () {
   const fieldInstructions = document.getElementById('field-instructions');
   const fieldSource = document.getElementById('field-source');
   const fieldNotes = document.getElementById('field-notes');
+  const fieldPrivate = document.getElementById('field-private');
 
   const detailDialog = document.getElementById('recipe-detail-dialog');
   const detailContent = document.getElementById('recipe-detail-content');
@@ -144,6 +146,7 @@ window.RecipeApp = (function () {
         <h3>${escapeHtml(recipe.title)}</h3>
         <div class="recipe-card-meta">
           ${recipe.category ? `<span class="category-badge">${escapeHtml(recipe.category)}</span>` : ''}
+          ${recipe.is_private ? `<span class="private-badge">Private</span>` : ''}
           ${recipe.servings ? `<span>${escapeHtml(recipe.servings)}</span>` : ''}
         </div>
         <div class="tag-row">${tags}</div>
@@ -207,6 +210,7 @@ window.RecipeApp = (function () {
     detailContent.innerHTML = `
       <h2>${escapeHtml(recipe.title)}</h2>
       ${recipe.category ? `<p class="category-badge">${escapeHtml(recipe.category)}</p>` : ''}
+      ${recipe.is_private ? `<p class="private-badge">Private</p>` : ''}
       ${meta ? `<p class="recipe-meta">${meta}</p>` : ''}
       <h3>Ingredients</h3>
       <ul>${ingredientItems}</ul>
@@ -215,6 +219,8 @@ window.RecipeApp = (function () {
       ${recipe.notes ? `<h3>Notes</h3><p>${escapeHtml(recipe.notes)}</p>` : ''}
       ${recipe.source ? `<p class="recipe-source">Source: ${escapeHtml(recipe.source)}</p>` : ''}
     `;
+    const isOwner = !!currentUserId && recipe.user_id === currentUserId;
+    editFromDetailButton.hidden = !isOwner;
     editFromDetailButton.setAttribute('data-id', recipe.id);
     detailDialog.showModal();
   }
@@ -263,9 +269,11 @@ window.RecipeApp = (function () {
       fieldInstructions.value = recipe.instructions || '';
       fieldSource.value = recipe.source || '';
       fieldNotes.value = recipe.notes || '';
+      fieldPrivate.checked = !!recipe.is_private;
     } else {
       formTitleHeading.textContent = 'Add Recipe';
       deleteButton.hidden = true;
+      fieldPrivate.checked = false;
       if (currentCategory) fieldCategory.value = currentCategory;
     }
 
@@ -305,7 +313,8 @@ window.RecipeApp = (function () {
       ingredients: fieldIngredients.value.trim(),
       instructions: fieldInstructions.value.trim(),
       source: fieldSource.value.trim() || null,
-      notes: fieldNotes.value.trim() || null
+      notes: fieldNotes.value.trim() || null,
+      is_private: fieldPrivate.checked
     };
 
     if (!payload.title || !payload.ingredients || !payload.instructions) {
@@ -349,6 +358,8 @@ window.RecipeApp = (function () {
       populateCategoryOptions();
       initialized = true;
     }
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    currentUserId = session?.user?.id || null;
     await loadRecipes();
   }
 

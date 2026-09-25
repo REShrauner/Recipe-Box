@@ -1,7 +1,10 @@
-// Sign-in gate. This is a personal recipe box - one account (you), created
-// once in the Supabase dashboard (Authentication > Users > Add user). No
-// public sign-up form on purpose, so a stranger can't create their own
-// account and start adding/deleting recipes.
+// Sign-in gate. Accounts are created by you in the Supabase dashboard
+// (Authentication > Users > Add user) - one per person who should have
+// access. No public sign-up form on purpose, so a stranger can't create
+// their own account. Everyone signed in can see everyone's non-private
+// recipes, but can only edit or delete the ones they added themselves
+// (enforced server-side by the recipes table's row-level security
+// policies, not by this file).
 (function () {
   const signInView = document.getElementById('sign-in-view');
   const appView = document.getElementById('app-view');
