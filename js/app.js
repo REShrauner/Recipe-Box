@@ -132,7 +132,10 @@ window.RecipeApp = (function () {
     });
   }
 
-  function renderRecipeCards(recipes) {
+  // showCategory: false while browsing inside a single category (the
+  // heading above already says which one, so repeating it on every card
+  // is just noise); true for search results, which can span categories.
+  function renderRecipeCards(recipes, showCategory) {
     recipeList.innerHTML = '';
     emptyState.hidden = recipes.length > 0;
 
@@ -145,7 +148,7 @@ window.RecipeApp = (function () {
       card.innerHTML = `
         <h3>${escapeHtml(recipe.title)}</h3>
         <div class="recipe-card-meta">
-          ${recipe.category ? `<span class="category-badge">${escapeHtml(recipe.category)}</span>` : ''}
+          ${showCategory && recipe.category ? `<span class="category-badge">${escapeHtml(recipe.category)}</span>` : ''}
           ${recipe.is_private ? `<span class="private-badge">Private</span>` : ''}
           ${recipe.servings ? `<span>${escapeHtml(recipe.servings)}</span>` : ''}
         </div>
@@ -186,7 +189,7 @@ window.RecipeApp = (function () {
       .slice()
       .sort((a, b) => a.title.localeCompare(b.title));
 
-    renderRecipeCards(filtered);
+    renderRecipeCards(filtered, !currentCategory);
   }
 
   backToCategoriesButton.addEventListener('click', () => {
